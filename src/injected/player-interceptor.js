@@ -231,38 +231,13 @@
     }
   }
 
-  function installActiveAdObserver() {
-    const root = document.documentElement;
-    if (!root) {
-      document.addEventListener("DOMContentLoaded", installActiveAdObserver, {
-        once: true
-      });
-      return;
-    }
-
-    const observer = new MutationObserver(() => {
-      try {
-        skipActiveAd();
-      } catch {
-        // A later mutation or polling pass will retry.
-      }
-    });
-    observer.observe(root, {
-      childList: true,
-      subtree: true,
-      attributes: true,
-      attributeFilter: ["class"]
-    });
-  }
-
-  installActiveAdObserver();
   window.setInterval(() => {
     try {
       skipActiveAd();
     } catch {
       // One transient YouTube DOM state must not stop future polling passes.
     }
-  }, 50);
+  }, 100);
 
   try {
     installInitialResponseGuard();

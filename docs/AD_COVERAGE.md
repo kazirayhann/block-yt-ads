@@ -15,8 +15,7 @@ documentation.
 
 Static buttoned interstitials use a separate path: CleanTube clicks the native
 Skip control, removes the static layout if it remains, clears the ad-only player
-state, and resumes the underlying content without seeking it. A document-start
-paint guard keeps this layout invisible before the active handler dismisses it.
+state, and resumes the underlying content without seeking it.
 
 ## Additional surfaces
 

@@ -1,8 +1,6 @@
 (() => {
   "use strict";
 
-  document.documentElement?.classList.add("cleantube-paint-guard");
-
   const STORAGE_KEY = "enabled";
   const AD_SELECTORS = [
     "ytd-display-ad-renderer",
@@ -243,7 +241,6 @@
     }
 
     root.classList.add("cleantube-enabled");
-    root.classList.add("cleantube-paint-guard");
     root.dataset.cleantubeContent = "active";
     observer ??= new MutationObserver(queueScan);
     observer.observe(root, {
@@ -260,7 +257,6 @@
 
   function stop() {
     document.documentElement?.classList.remove("cleantube-enabled");
-    document.documentElement?.classList.remove("cleantube-paint-guard");
     if (document.documentElement) {
       delete document.documentElement.dataset.cleantubeContent;
     }

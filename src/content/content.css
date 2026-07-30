@@ -1,14 +1,3 @@
-html.cleantube-paint-guard
-  #movie_player
-  .ytp-video-interstitial-buttoned-centered-layout,
-html.cleantube-paint-guard
-  #movie_player
-  .ytp-video-interstitial-buttoned-overlay-layout {
-  display: none !important;
-  visibility: hidden !important;
-  opacity: 0 !important;
-}
-
 html.cleantube-enabled ytd-display-ad-renderer,
 html.cleantube-enabled ytd-promoted-sparkles-web-renderer,
 html.cleantube-enabled ytd-promoted-sparkles-text-search-renderer,

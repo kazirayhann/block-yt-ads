@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "CleanTube Ad Hider",
-  "version": "1.5.0",
+  "version": "1.4.1",
   "description": "Hides YouTube ad overlays and automatically skips skippable video ads.",
   "permissions": ["storage", "declarativeNetRequest"],
   "host_permissions": [
