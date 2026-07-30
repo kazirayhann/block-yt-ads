@@ -1,5 +1,7 @@
 # CleanTube Ad Hider
 
+Current version: **1.2.0**
+
 A lightweight Chrome Manifest V3 extension that:
 
 - automatically clicks YouTube's available ad skip button;

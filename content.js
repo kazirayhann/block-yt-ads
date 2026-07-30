@@ -20,7 +20,11 @@
     // Home-page masthead and promotional banners.
     "ytd-masthead-ad-v3-renderer",
     "ytd-video-masthead-ad-v3-renderer",
+    "ytd-video-masthead-ad-advertiser-info-renderer",
     "ytd-primetime-promo-renderer",
+    "ytm-promoted-video-renderer",
+    "[data-ad-slot-id]",
+    "[is-ad='true']",
     "yt-mealbar-promo-renderer",
     "ytd-banner-promo-renderer",
     ".ytd-in-feed-ad-layout-renderer",
@@ -42,7 +46,13 @@
   function isVisible(element) {
     if (!(element instanceof HTMLElement)) return false;
     const style = getComputedStyle(element);
-    return style.display !== "none" && style.visibility !== "hidden";
+    const bounds = element.getBoundingClientRect();
+    return (
+      style.display !== "none" &&
+      style.visibility !== "hidden" &&
+      bounds.width > 0 &&
+      bounds.height > 0
+    );
   }
 
   function removePromotedContent() {
@@ -64,9 +74,65 @@
       }
     }
 
+    // YouTube also ships an experiment where the skip control has generated
+    // class names. Match its accessible label/text instead of those classes.
+    const controls = document.querySelectorAll(
+      "button, [role='button'], tp-yt-paper-button"
+    );
+    for (const control of controls) {
+      const label = [
+        control.getAttribute("aria-label"),
+        control.getAttribute("title"),
+        control.textContent
+      ]
+        .filter(Boolean)
+        .join(" ")
+        .replace(/\s+/g, " ")
+        .trim()
+        .toLowerCase();
+
+      if (
+        isVisible(control) &&
+        /^(skip|skip ad|skip ads|skip video)\b/.test(label)
+      ) {
+        control.click();
+        return;
+      }
+    }
+
     document
       .querySelectorAll(".ytp-ad-overlay-close-button")
       .forEach((button) => button.click());
+  }
+
+  function removeSponsoredCards() {
+    if (!settings.enabled || !settings.hidePromotedContent) return;
+
+    const markers = document.querySelectorAll(
+      "span, yt-formatted-string, .yt-core-attributed-string"
+    );
+    for (const marker of markers) {
+      const text = marker.textContent?.replace(/\s+/g, " ").trim().toLowerCase();
+      if (text !== "sponsored" && text !== "ad") continue;
+
+      const container = marker.closest(
+        [
+          "ytd-ad-slot-renderer",
+          "ytd-display-ad-renderer",
+          "ytd-video-masthead-ad-v3-renderer",
+          "ytd-rich-item-renderer",
+          "ytm-promoted-video-renderer",
+          "[data-ad-slot-id]",
+          "[is-ad='true']"
+        ].join(",")
+      );
+
+      // Never remove the watch-page player. In-stream ads are handled through
+      // their skip control or the guarded fast-forward path.
+      if (container && !container.matches("#movie_player, #player")) {
+        container.remove();
+      }
+    }
   }
 
   function finishInStreamAd() {
@@ -116,6 +182,7 @@
   function handleAds() {
     scheduled = false;
     removePromotedContent();
+    removeSponsoredCards();
     removeShortsAds();
     clickSkipButton();
     finishInStreamAd();
@@ -131,6 +198,13 @@
     document.documentElement.classList.toggle(
       "cleantube-enabled",
       settings.enabled && settings.hidePromotedContent
+    );
+    document.documentElement.dataset.cleantubeEnabled = String(settings.enabled);
+    document.documentElement.dataset.cleantubeAutoSkip = String(
+      settings.autoSkip
+    );
+    document.documentElement.dataset.cleantubeFastForward = String(
+      settings.fastForwardVideoAds
     );
     scheduleAdCheck();
   }

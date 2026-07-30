@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "CleanTube Ad Hider",
-  "version": "1.0.0",
+  "version": "1.2.0",
   "description": "Hides YouTube ad overlays and automatically clicks available skip buttons.",
   "permissions": ["storage"],
   "host_permissions": ["https://www.youtube.com/*"],
@@ -27,6 +27,12 @@
       "css": ["content.css"],
       "js": ["content.js"],
       "run_at": "document_start"
+    },
+    {
+      "matches": ["https://www.youtube.com/*"],
+      "js": ["player-bridge.js"],
+      "run_at": "document_start",
+      "world": "MAIN"
     }
   ]
 }
