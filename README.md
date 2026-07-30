@@ -2,65 +2,40 @@
 
 A lightweight Chrome Manifest V3 extension that:
 
-- hides common YouTube banner, feed, text-card, image, and overlay ads;
-- removes known ad placements from YouTube player responses before playback;
-- blocks requests to common Google advertising hosts;
-- clicks visible “Skip ad” buttons automatically;
-- continuously monitors pre-roll and mid-roll ads, then mutes and fast-forwards
-  them when possible;
-- provides a simple on/off switch.
+- automatically clicks YouTube's available ad skip button;
+- fast-forwards in-stream ads only while YouTube marks the player as showing an
+  ad;
+- closes video ad overlays;
+- hides promoted banners and feed ads;
+- detects and removes sponsored Shorts containers;
+- provides on/off controls from the extension popup.
 
-See [the ad-format coverage matrix](docs/AD_COVERAGE.md) for the handling
-strategy used for each official YouTube ad type.
+## Format coverage
 
-## Project structure
-
-```text
-block-yt-ads/
-├── manifest.json
-├── README.md
-├── assets/
-│   └── icons/
-│       ├── icon-16.png
-│       ├── icon-32.png
-│       ├── icon-48.png
-│       └── icon-128.png
-├── rules/
-│   └── ad-servers.json
-└── src/
-    ├── content/
-    │   ├── content.css
-    │   └── content.js
-    ├── injected/
-    │   └── player-interceptor.js
-    └── popup/
-        ├── popup.css
-        ├── popup.html
-        └── popup.js
-```
-
-- `manifest.json` contains Chrome extension configuration and permissions.
-- `src/content/` contains the scripts and styles injected into YouTube.
-- `src/popup/` contains the extension popup interface and preference control.
+| YouTube ad format | Extension action |
+| --- | --- |
+| Skippable in-stream | Clicks the available skip button |
+| Non-skippable in-stream | Attempts to seek to the end; falls back to 16x |
+| In-feed video | Removes the promoted result/container |
+| Bumper | Attempts to seek to the end; falls back to 16x |
+| Masthead | Hides/removes known masthead renderers |
+| YouTube Shorts | Removes a Short only when an ad/sponsored marker is present |
 
 ## Install in Chrome
 
 1. Open `chrome://extensions`.
 2. Turn on **Developer mode** in the top-right corner.
 3. Click **Load unpacked**.
-4. Select this project folder.
-5. Open or refresh YouTube.
+4. Select this `block-yt-ads` folder.
+5. Open or refresh a YouTube tab.
 
-After editing the source, click the extension's **Reload** button on
-`chrome://extensions`, then refresh the YouTube tab.
+After editing the code, click the extension's **Reload** button on
+`chrome://extensions`, then refresh YouTube.
 
-## Privacy
+## Important limitation
 
-This extension runs only on `youtube.com` and `m.youtube.com`. It stores only the
-on/off preference locally and does not collect or transmit user data.
-
-## Limitation
-
-YouTube frequently changes its player and page markup. Selectors may therefore
-need maintenance. Ads that are inserted directly into the same video stream
-cannot always be skipped by a browser extension.
+This extension does not modify or intercept YouTube network requests. It works
+against the page and player UI, so YouTube can prevent seeking or change its
+markup at any time. In those cases an ad may still play, and selectors may need
+updates. Chrome Web Store publication is also subject to Google's current
+policies and review.

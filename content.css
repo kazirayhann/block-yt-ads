@@ -1,0 +1,21 @@
+/* Elements injected by YouTube for banner and overlay advertisements. */
+.cleantube-enabled ytd-display-ad-renderer,
+.cleantube-enabled ytd-promoted-sparkles-web-renderer,
+.cleantube-enabled ytd-promoted-video-renderer,
+.cleantube-enabled ytd-ad-slot-renderer,
+.cleantube-enabled ytd-in-feed-ad-layout-renderer,
+.cleantube-enabled ytd-search-pyv-renderer,
+.cleantube-enabled ytd-promoted-sparkles-text-search-renderer,
+.cleantube-enabled ytd-masthead-ad-v3-renderer,
+.cleantube-enabled ytd-video-masthead-ad-v3-renderer,
+.cleantube-enabled ytd-primetime-promo-renderer,
+.cleantube-enabled yt-mealbar-promo-renderer,
+.cleantube-enabled ytd-banner-promo-renderer,
+.cleantube-enabled .ytd-in-feed-ad-layout-renderer,
+.cleantube-enabled .ytp-ad-overlay-container,
+.cleantube-enabled .ytp-ad-player-overlay,
+.cleantube-enabled .ytp-ad-message-container {
+  display: none !important;
+  visibility: hidden !important;
+  pointer-events: none !important;
+}
