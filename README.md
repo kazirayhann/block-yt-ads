@@ -1,12 +1,16 @@
 # CleanTube Ad Hider
 
-Current version: **1.2.0**
+Current version: **1.4.0**
 
 A lightweight Chrome Manifest V3 extension that:
 
 - automatically clicks YouTube's available ad skip button;
+- removes ad placements from initial and SPA player responses before YouTube
+  constructs its ad player;
 - fast-forwards in-stream ads only while YouTube marks the player as showing an
   ad;
+- visually covers timer-based static/image interstitial ads until the player
+  allows them to be dismissed;
 - closes video ad overlays;
 - hides promoted banners and feed ads;
 - detects and removes sponsored Shorts containers;

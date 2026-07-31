@@ -1,6 +1,93 @@
 (() => {
   "use strict";
 
+  const AD_RESPONSE_KEYS = ["adPlacements", "playerAds", "adSlots"];
+
+  function protectionEnabled() {
+    return document.documentElement?.dataset.cleantubeEnabled !== "false";
+  }
+
+  function sanitizePlayerResponse(response) {
+    if (!protectionEnabled() || !response || typeof response !== "object") {
+      return response;
+    }
+
+    for (const key of AD_RESPONSE_KEYS) {
+      if (key in response) response[key] = [];
+    }
+
+    // Some navigation responses wrap the actual player response.
+    if (response.playerResponse && typeof response.playerResponse === "object") {
+      sanitizePlayerResponse(response.playerResponse);
+    }
+
+    return response;
+  }
+
+  /*
+   * YouTube's first watch-page response is assigned directly to this global.
+   * Intercepting the assignment prevents the ad player—including static
+   * countdown interstitials—from being created in the first place.
+   */
+  function interceptInitialPlayerResponse() {
+    const property = "ytInitialPlayerResponse";
+    const descriptor = Object.getOwnPropertyDescriptor(window, property);
+    if (descriptor && !descriptor.configurable) {
+      sanitizePlayerResponse(window[property]);
+      return;
+    }
+
+    let currentValue = sanitizePlayerResponse(window[property]);
+    Object.defineProperty(window, property, {
+      configurable: true,
+      enumerable: true,
+      get() {
+        return currentValue;
+      },
+      set(value) {
+        currentValue = sanitizePlayerResponse(value);
+      }
+    });
+  }
+
+  /*
+   * SPA navigations request /youtubei/v1/player and consume it with
+   * Response.json(). Keep the native response intact and sanitize only parsed
+   * player-shaped objects returned to YouTube.
+   */
+  function interceptPlayerFetchResponses() {
+    const nativeJson = Response.prototype.json;
+    if (nativeJson.__cleantubeWrapped) return;
+
+    async function cleanTubeJson() {
+      const data = await nativeJson.call(this);
+      return sanitizePlayerResponse(data);
+    }
+
+    Object.defineProperty(cleanTubeJson, "__cleantubeWrapped", {
+      value: true
+    });
+    Response.prototype.json = cleanTubeJson;
+  }
+
+  function interceptSerializedPlayerResponses() {
+    const nativeParse = JSON.parse;
+    if (nativeParse.__cleantubeWrapped) return;
+
+    function cleanTubeParse(text, reviver) {
+      return sanitizePlayerResponse(nativeParse.call(JSON, text, reviver));
+    }
+
+    Object.defineProperty(cleanTubeParse, "__cleantubeWrapped", {
+      value: true
+    });
+    JSON.parse = cleanTubeParse;
+  }
+
+  interceptInitialPlayerResponse();
+  interceptPlayerFetchResponses();
+  interceptSerializedPlayerResponses();
+
   const SKIP_SELECTORS = [
     ".ytp-skip-ad-button",
     ".ytp-ad-skip-button",
@@ -43,6 +130,17 @@
 
   function clickSkip(player) {
     if (!settingEnabled("cleantubeAutoSkip")) return false;
+
+    // This internal method is present in some YouTube player builds and can
+    // dismiss static interstitials before their visual countdown completes.
+    if (typeof player.skipAd === "function") {
+      try {
+        player.skipAd();
+        if (!isAdPlaying(player)) return true;
+      } catch {
+        // Fall through to the DOM control used by other player experiments.
+      }
+    }
 
     for (const selector of SKIP_SELECTORS) {
       const control = player.querySelector(selector);
@@ -99,7 +197,38 @@
     const player = document.getElementById("movie_player");
     if (!isAdPlaying(player)) return;
 
-    if (!clickSkip(player)) finishAd(player);
+    const isStaticInterstitial = Boolean(
+      player.querySelector(".ytp-video-interstitial-buttoned-centered-layout")
+    );
+    const skipped = clickSkip(player);
+
+    // A static interstitial displays over the user's actual video element.
+    // Seeking that element would incorrectly skip their content, so only use
+    // the video fallback for genuine video ads.
+    if (!skipped && !isStaticInterstitial && isAdPlaying(player)) {
+      finishAd(player);
+    }
+  }
+
+  function sanitizeLivePlayerConfig() {
+    if (!protectionEnabled()) return;
+
+    sanitizePlayerResponse(window.ytInitialPlayerResponse);
+
+    const args = window.ytplayer?.config?.args;
+    if (!args) return;
+
+    for (const key of ["raw_player_response", "player_response"]) {
+      if (typeof args[key] === "string") {
+        try {
+          args[key] = JSON.stringify(sanitizePlayerResponse(JSON.parse(args[key])));
+        } catch {
+          // Ignore a partially populated config while YouTube is updating it.
+        }
+      } else {
+        sanitizePlayerResponse(args[key]);
+      }
+    }
   }
 
   const observer = new MutationObserver(handlePlayerAd);
@@ -116,6 +245,7 @@
       childList: true,
       subtree: true
     });
+    sanitizeLivePlayerConfig();
     handlePlayerAd();
   }
 
@@ -123,5 +253,8 @@
   else document.addEventListener("DOMContentLoaded", start, { once: true });
 
   // The interstitial countdown changes without predictable DOM mutations.
-  setInterval(handlePlayerAd, 200);
+  setInterval(() => {
+    sanitizeLivePlayerConfig();
+    handlePlayerAd();
+  }, 200);
 })();

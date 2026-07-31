@@ -23,3 +23,45 @@
   visibility: hidden !important;
   pointer-events: none !important;
 }
+
+/*
+ * Static/image interstitial ads have no video timeline to fast-forward. Keep
+ * YouTube's component alive so its timer can finish, but never expose the ad,
+ * advertiser, sponsored badge, background image, or countdown to the viewer.
+ */
+html[data-cleantube-enabled="true"]
+  #movie_player.ad-showing
+  .ytp-video-interstitial-buttoned-centered-layout,
+html[data-cleantube-enabled="true"]
+  #movie_player.ad-interrupting
+  .ytp-video-interstitial-buttoned-centered-layout {
+  opacity: 0 !important;
+  visibility: hidden !important;
+  pointer-events: none !important;
+}
+
+html[data-cleantube-enabled="true"] #movie_player.ad-showing .video-ads,
+html[data-cleantube-enabled="true"] #movie_player.ad-interrupting .video-ads {
+  position: absolute !important;
+  z-index: 70 !important;
+  inset: 0 !important;
+  display: block !important;
+  overflow: hidden !important;
+  background:
+    radial-gradient(circle at 50% 45%, #202633 0, #10141b 42%, #080a0e 100%)
+    !important;
+}
+
+html[data-cleantube-enabled="true"] #movie_player.ad-showing .video-ads::after,
+html[data-cleantube-enabled="true"] #movie_player.ad-interrupting .video-ads::after {
+  position: absolute;
+  z-index: 2147483647;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  color: #8791a2;
+  content: "CleanTube is removing an ad…";
+  font: 500 14px/1.4 Inter, Arial, sans-serif;
+  letter-spacing: 0.15px;
+  pointer-events: none;
+}

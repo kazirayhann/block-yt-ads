@@ -209,6 +209,10 @@
     scheduleAdCheck();
   }
 
+  // Publish the enabled-by-default state before YouTube constructs its player.
+  // The stored preference replaces it as soon as Chrome returns the settings.
+  applySettings();
+
   chrome.storage.sync.get(DEFAULTS, (savedSettings) => {
     settings = { ...DEFAULTS, ...savedSettings };
     applySettings();
